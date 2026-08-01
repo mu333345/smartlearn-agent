@@ -3,9 +3,9 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
-api_key = os.getenv("OPENROUTER_API_KEY")
+api_key = os.getenv("DEEPSEEK_API_KEY")
 if not api_key:
-    raise SystemExit("OPENROUTER_API_KEY is missing. Add it to .env and try again.")
+    raise SystemExit("DEEPSEEK_API_KEY is missing. Add it to .env and try again.")
 
 # Initialize the OpenAI-compatible client for OpenRouter
 client = OpenAI(

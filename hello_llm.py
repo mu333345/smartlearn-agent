@@ -4,12 +4,12 @@ from dotenv import load_dotenv     # Loads environment variables from the .env f
 import openai                      # Official OpenAI SDK for calling AI models
 
 load_dotenv()
-api_key = os.getenv("OPENROUTER_API_KEY")
+api_key = os.getenv("DEEPSEEK_API_KEY")
 if not api_key:
-    raise SystemExit("OPENROUTER_API_KEY is missing. Add it to .env and try again.")                      # Read the API Key from the .env file
+    raise SystemExit("DEEPSEEK_API_KEY is missing. Add it to .env and try again.")                      # Read the API Key from the .env file
 
 client = openai.OpenAI(            # Create a "client" object
-    base_url="https://api.deepseek.com",   # Point it at OpenRouter
+    base_url="https://api.deepseek.com",   #
     api_key=api_key,    # Read the Key from .env
 )
 
