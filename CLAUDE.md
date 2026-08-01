@@ -6,13 +6,12 @@ SmartLearn Agent is an AI-powered learning assistant that parses PDF lecture sli
 ## Tech Stack
 - Backend: Python + FastAPI
 - Frontend: React + Vite
-- LLM: OpenRouter (qwen/qwen3.5-flash-02-23)
+- LLM: DeepSeek (qwen/qwen3.5-flash-02-23)
 - Vector Search: FAISS (Day 3)
 
 ## AI Coding Environment
 - Claude Code uses DeepSeek directly through ANTHROPIC_BASE_URL
-- OpenRouter is only for the student Python API exercises
-- Never route Claude Code through OpenRouter
+- Deepseek is also used for the student Python API exercises
 
 ## Conventions
 - API keys in .env, never commit
