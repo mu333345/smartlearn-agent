@@ -36,12 +36,21 @@ def extract_text(pdf_path: str) -> list[tuple[int, str]]:
     Open a PDF and return a list of (page_number, text) for every page that
     contains extractable text.  Pages with no text (e.g. scanned images) are
     silently skipped.
+
+    Prints extraction progress to stderr so the summary output on stdout
+    remains clean for piping.
     """
     pages: list[tuple[int, str]] = []
 
     try:
         with pdfplumber.open(pdf_path) as pdf:
+            total = len(pdf.pages)
             for page in pdf.pages:
+                print(
+                    f"Extracting page {page.page_number}/{total}...",
+                    file=sys.stderr,
+                    flush=True,
+                )
                 text = page.extract_text()
                 if text and text.strip():
                     pages.append((page.page_number, text.strip()))
@@ -94,7 +103,48 @@ def truncate_pages(
 
 
 # ---------------------------------------------------------------------------
-# Step 4 — Call the DeepSeek LLM
+# Step 4 — Parse and validate the --pages range argument
+# ---------------------------------------------------------------------------
+def parse_page_range(raw: str) -> tuple[int, int]:
+    """
+    Parse a 'START-END' string into a (start, end) tuple.
+
+    Raises ValueError with a friendly message on malformed input:
+      - missing dash
+      - non-integer parts
+      - start > end
+      - start < 1
+      - extra content (e.g. '1-2-3')
+    """
+    if "-" not in raw:
+        raise ValueError(f"Invalid page range '{raw}' — expected format is START-END (e.g. 1-5)")
+
+    parts = raw.split("-")
+    if len(parts) != 2:
+        raise ValueError(
+            f"Invalid page range '{raw}' — expected exactly one dash (e.g. 1-5), got {len(parts) - 1}"
+        )
+
+    try:
+        start = int(parts[0])
+        end = int(parts[1])
+    except ValueError:
+        raise ValueError(
+            f"Invalid page range '{raw}' — START and END must be integers (e.g. 1-5)"
+        )
+
+    if start < 1:
+        raise ValueError(f"Invalid page range '{raw}' — START must be at least 1, got {start}")
+    if end < start:
+        raise ValueError(
+            f"Invalid page range '{raw}' — START ({start}) must be <= END ({end})"
+        )
+
+    return start, end
+
+
+# ---------------------------------------------------------------------------
+# Step 5 — Call the DeepSeek LLM
 # ---------------------------------------------------------------------------
 def call_llm(document_text: str) -> str:
     """
@@ -116,7 +166,7 @@ def call_llm(document_text: str) -> str:
         "## Key Points\n"
         "A bulleted list of the most important facts, claims, or findings.\n"
         "- Each bullet MUST end with a [Page X] citation.\n"
-        "- Include 5-10 points depending on document length.\n\n"
+        "- Include exactly 3-5 points depending on document length.\n\n"
         "## Limitations\n"
         "Note gaps, missing context, assumptions, or topics the document "
         "only briefly mentions.\n\n"
@@ -139,7 +189,7 @@ def call_llm(document_text: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Step 5 — Main entry point
+# Step 6 — Main entry point
 # ---------------------------------------------------------------------------
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -149,10 +199,44 @@ def main() -> None:
         "pdf_path",
         help="Path to the PDF file to summarise",
     )
+    parser.add_argument(
+        "--pages",
+        help="Page range to summarise (e.g. 1-5).  If omitted, all pages are used.",
+        default=None,
+    )
     args = parser.parse_args()
+
+    # ---- Parse page range (before extraction so errors surface early) ----
+    page_range = None
+    if args.pages is not None:
+        try:
+            page_range = parse_page_range(args.pages)
+        except ValueError as exc:
+            print(f"Error: {exc}")
+            sys.exit(1)
 
     # ---- Extract ----
     pages = extract_text(args.pdf_path)
+
+    # ---- Filter to requested page range ----
+    if page_range is not None:
+        start, end = page_range
+        total_pages_in_pdf = len(pages)
+        # Clamp END to actual page count; warn if out of bounds
+        if start > total_pages_in_pdf:
+            print(
+                f"Error: page range {start}-{end} starts beyond "
+                f"the document ({total_pages_in_pdf} page(s) with text)."
+            )
+            sys.exit(1)
+        if end > total_pages_in_pdf:
+            print(
+                f"Note: page range {start}-{end} extends beyond "
+                f"the document ({total_pages_in_pdf} page(s) with text). "
+                f"Using pages {start}-{total_pages_in_pdf}."
+            )
+            end = total_pages_in_pdf
+        pages = [(pn, txt) for pn, txt in pages if start <= pn <= end]
 
     if not pages:
         print(
