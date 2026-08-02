@@ -1,50 +1,112 @@
 # Contract for ai agent
 
 ## goal
-Learn Component State
-
+页面美化
 
 ## input 
-目标文件：smartlearn-frontend/src/App.jsx。
+目标文件：
 
-现有状态：该文件目前是一个最简的 Vite + React 起始页（通常只包含一个 <h1> 标题或 Vite 图标），没有任何业务状态或交互逻辑。
+    smartlearn-frontend/src/App.jsx（当前已包含完整的功能逻辑，所有 JSX 结构已就位）。
 
-前提条件：npm install 已执行，npm run dev 能正常打开页面。
+    smartlearn-frontend/src/index.css（当前可能只有 Vite 默认的样式，或内容极少）。
+
+现有行为：
+
+    所有功能（上传、聊天、禁用、加载、错误、回答、Page chips）均已通过 2.6 验证。
+
+    HTML 结构使用了语义化标签（form、label、input、button 等），但样式为浏览器默认值。
+
+样式状态：页面在宽屏和窄屏下可能显示拥挤或对齐不良。
 
 ## expected output
-代码变动：在 App.jsx 中最小化新增以下内容（且只新增这些）：
+对 CSS 文件进行最小化样式补充，使页面具备以下特征（但不强制使用特定设计风格）：
 
-    导入 useState（如果尚未导入）；
+布局结构：
 
-    添加一个状态变量 status，初始值为 "Not uploaded"；
+    内容居中，最大宽度控制在 760px 左右，两侧留白（适合阅读）。
 
-    在 JSX 中渲染该状态（例如 <p>Status: {status}</p>）；
+    上传区和聊天区用卡片（白色背景 + 圆角 + 阴影/边框）分隔，视觉上有层次感。
 
-    添加一个按钮，点击后将 status 更新为 "Ready"。
+表单元素：
 
-运行时表现：启动 Vite 后，页面显示状态文本和按钮。点击按钮，页面上的文字从 "Not uploaded" 变为 "Ready"，浏览器不刷新。
+    文件选择器（<input type="file">）和文本输入框有足够的 padding（内边距），点击区域友好。
 
-最终清理（关键）：在我学会并确认循环机制后，我会要求你仅移除上述临时实验代码，并确保 App.jsx 恢复为有效的起始页（或保留后续开发所需的空壳），不得留下任何死代码或注释。
+    输入框聚焦时显示明显的边框高亮（例如蓝色外发光）。
+
+按钮状态：
+
+    正常状态：有背景色（例如蓝色），文字白色，圆角。
+
+    悬停状态（:hover）：背景色加深。
+
+    禁用状态（:disabled）：透明度降低至 0.55，光标变为 not-allowed。
+
+状态反馈：
+
+    加载文字（"上传中..." / "思考中..."）用醒目的颜色（如橙色或蓝色）显示，并可能带简单的旋转动画（可选）。
+
+    错误提示（role="alert"）用红色背景或红色边框突出显示，文字颜色为深红。
+
+    成功上传后显示的元数据（页数、字符数）用绿色或灰色徽章样式。
+
+引用标签（Page chips）：
+
+    每个页码显示为圆角矩形背景（例如浅蓝色背景 + 深蓝色文字），内边距适中，多个标签之间间距均匀。
+
+响应式：
+
+    在窄屏（如手机宽度 400px）下，所有内容不溢出，按钮和输入框宽度自适应。
+
+字体与颜色：
+
+    使用系统字体栈（如 system-ui, sans-serif），保持清晰可读。
+
+    主背景色为浅灰（#f4f7fb），卡片为白色，文字为深色（#172033）。
+
+⚠️ 关键约束：
+
+    所有样式必须通过修改 index.css 或在 App.jsx 中添加 className 实现，不得使用内联 style 属性（除非是动态样式，如基于状态的简单颜色变化）。
+
+    不得修改任何 JavaScript 逻辑（状态管理、事件处理、条件渲染、API 调用）。
 
 ## modify boundary
 允许修改：
-    只允许修改 smartlearn-frontend/src/App.jsx 这一个文件。
+
+smartlearn-frontend/src/index.css（添加或替换样式规则）。
+
+smartlearn-frontend/src/App.jsx（仅限于添加 className 属性到现有 JSX 元素，例如 <div className="card">，不得修改任何事件处理函数、状态逻辑或条件渲染）。
+
+允许创建（可选）：
+
+    smartlearn-frontend/src/App.css（如果希望样式与组件更接近，但推荐直接使用 index.css 保持简单。
 
 绝对不允许触碰：
 
-    src/main.jsx、src/index.css；
+    src/api.js（完全不动）。
 
-    package.json、vite.config.js、eslint.config.js；
+    src/main.jsx（不动）。
 
-    项目根目录及后端（smartlearn-backend/）下的任何文件；
+    smartlearn-backend/ 下的任何文件。
 
-    禁止新增任何额外的 .css 类或样式标签（实验不带样式）。
+    package.json（不新增依赖）。
+
+禁止的操作：
+
+    不要引入任何 UI 库（如 MUI、Ant Design、Tailwind CSS）。
+
+    不要修改按钮的 onClick 或状态更新的逻辑。
+
+    不要重新排列 HTML 结构（如果结构不合理，应该先回 2.6 改，而不是在美化步骤中顺手改）。
+
 
 ## nongoals
-不要添加第二个状态变量或副作用（useEffect）。
+不要添加动画库（如 Framer Motion）或复杂的 CSS 动画（除非是极简的旋转加载图标）。
 
-不要修改按钮样式或布局（保持原生 HTML 按钮外观即可）。
+不要改变字体（使用系统字体即可，不需要 Google Fonts）。
 
-不要让这个实验代码成为永久功能——本次实验是临时插入的，后续必须干净移除。
+不要添加暗黑模式或主题切换。
 
-不要在这个实验中引入 API 请求、路由跳转或复杂逻辑。
+不要添加背景图片、渐变或装饰性图形。
+
+不要改变任何用户交互流程（如新增弹窗、提示框等）。
+
