@@ -18,9 +18,9 @@
 
 ## What We Will NOT Build
 
-- ______
-- ______
-- ______
+- User authentication — workshop time is limited, so skip login
+- Multi-file support — perfect the single-PDF experience first
+- Mobile app — web version only
 
 
 ## Data Flow
